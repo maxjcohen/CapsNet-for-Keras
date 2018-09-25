@@ -9,7 +9,7 @@ from keras.layers.convolutional import Convolution2D
 from keras import backend as K
 
 class PrimaryCaps(Convolution2D):
-    """PrimaryCaps layer as described in Hinton's papyer"""
+    """PrimaryCaps layer as described in Hinton's paper"""
     def __init__(self, capsules, capsule_dim, **kwargs):
         super().__init__(filters=capsules*capsule_dim, **kwargs)
         self.capsule_dim = capsule_dim
