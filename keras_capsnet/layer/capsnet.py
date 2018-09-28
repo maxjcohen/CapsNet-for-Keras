@@ -18,9 +18,10 @@ class PrimaryCaps(Convolution2D):
     def call(self, inputs):
         # Apply convolution
         outputs = super().call(inputs)
+        outputs_shape = outputs.shape
 
         # Reshape -> (None, -1, capsule_dim)
-        outputs = K.reshape(outputs, (K.shape(outputs)[0], -1, self.capsule_dim))
+        outputs = K.reshape(outputs, (K.shape(outputs)[0], outputs_shape[1]*outputs_shape[2]*self.capsules, self.capsule_dim))
 
         # Squash
         s_norm = K.sum(K.square(outputs), -1, keepdims=True)
