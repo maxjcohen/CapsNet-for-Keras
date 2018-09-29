@@ -92,3 +92,14 @@ class Caps(Layer):
         s_norm = K.sum(K.square(s), -1, keepdims=True)
         scale = s_norm / (1 + s_norm) / K.sqrt(s_norm + K.epsilon())
         return s * scale
+
+class Length(Layer):
+    """Output of a capsule network, compute the norm of each capsule"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def call(self, inputs):
+        return K.sqrt(K.sum(K.square(inputs), axis=-1))
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[:-1]
