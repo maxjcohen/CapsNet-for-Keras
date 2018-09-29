@@ -103,3 +103,17 @@ class Length(Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape[:-1]
+
+class Mask(Layer):
+    """Mask all but correct capsule. Use for training with a decoder."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def call(self, inputs, y_true):
+        mask = K.expand_dims(y_true, -1)
+
+        return K.batch_flatten(inputs * mask)
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], input_shape[1] * input_shape[2])
