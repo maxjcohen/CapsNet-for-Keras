@@ -73,7 +73,7 @@ class Caps(Layer):
         b = K.zeros(shape=(K.shape(u_hat)[0], self.capsules, self.input_capsules))
 
         for r in range(self.routings):
-            c = K.softmax(b)
+            c = K.softmax(b, axis=1)
 
             # Weighted sum, and squash activation
             # s.shape       batch_size, capsules, dim_capsule
