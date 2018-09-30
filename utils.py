@@ -13,17 +13,13 @@ class LossHistory(Callback):
         for key, metric in self.metrics.items():
             self.metrics[key].append( logs.get(key) )
 
-def plotHistory(loss, acc):
+def plotHistory(metrics):
+    num_metrics = len(metrics)
     plt.figure(figsize=(20, 4))
-    plt.subplot(1, 2, 1)
 
-    plt.plot(loss)
-    plt.title('loss through training')
-    plt.ylabel('loss')
-    plt.xlabel('batch')
+    for idx_metric, (metric_name, metric) in enumerate(metrics.items()):
+        plt.subplot(1, num_metrics, idx_metric+1)
 
-    plt.subplot(1, 2, 2)
-    plt.plot(acc, 'g')
-    plt.title('accuracy through training')
-    plt.ylabel('accuracy')
-    plt.xlabel('batch')
+        plt.plot(metric)
+        plt.title(metric_name)
+        plt.xlabel('batch')
