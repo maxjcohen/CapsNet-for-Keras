@@ -10,10 +10,11 @@ from keras import backend as K
 
 class PrimaryCaps(Convolution2D):
     """PrimaryCaps layer as described in Hinton's paper"""
-    def __init__(self, capsules, capsule_dim, **kwargs):
+    def __init__(self, capsules, capsule_dim, activation_caps=None, **kwargs):
         super().__init__(filters=capsules*capsule_dim, **kwargs)
         self.capsule_dim = capsule_dim
         self.capsules = capsules
+        self.activation_caps = activation_caps
 
     def call(self, inputs):
         # Apply convolution
@@ -22,11 +23,11 @@ class PrimaryCaps(Convolution2D):
 
         # Reshape -> (None, -1, capsule_dim)
         outputs = K.reshape(outputs, (K.shape(outputs)[0], outputs_shape[1]*outputs_shape[2]*self.capsules, self.capsule_dim))
-
-        # Squash
-        s_norm = K.sum(K.square(outputs), -1, keepdims=True)
-        scale = s_norm / (1 + s_norm) / K.sqrt(s_norm + K.epsilon())
-        return outputs * scale
+        
+        if self.activation_caps:
+            return self.activation_caps(outputs)
+        
+        return outputs
 
     def compute_output_shape(self, input_shape):
         outputs_shape = super().compute_output_shape(input_shape)
@@ -34,7 +35,7 @@ class PrimaryCaps(Convolution2D):
 
 class Caps(Layer):
     """Regular capsule layer. Input must be a PrimaryCaps layer. For example, see CapsDigit in original paper."""
-    def __init__(self, capsules, capsule_dim, routings, kernel_initializer='glorot_uniform', kernel_regularizer=None, kernel_constraint=None, **kwargs):
+    def __init__(self, capsules, capsule_dim, routings, activation, kernel_initializer='glorot_uniform', kernel_regularizer=None, kernel_constraint=None, **kwargs):
         super().__init__(**kwargs)
         self.capsules = capsules
         self.capsule_dim = capsule_dim
@@ -42,6 +43,8 @@ class Caps(Layer):
         self.kernel_initializer = kernel_initializer
         self.kernel_regularizer = kernel_regularizer
         self.kernel_constraint = kernel_constraint
+        self.activation = activation
+        
 
     def build(self, input_shape):
         assert len(input_shape) >= 3, "The input Tensor (PrimaryCaps) should have shape=[None, num_capsules, dim_capsule]"
@@ -78,7 +81,7 @@ class Caps(Layer):
             # Weighted sum, and squash activation
             # s.shape       batch_size, capsules, dim_capsule
             s = K.batch_dot(c, u_hat, [2, 2])
-            v = self.squash(s)
+            v = self.activation(s)
 
             if r > 0:
                 b += K.batch_dot(v, u_hat, axes=[2, 3])
@@ -87,11 +90,6 @@ class Caps(Layer):
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], self.capsules, self.capsule_dim)
-
-    def squash(self, s):
-        s_norm = K.sum(K.square(s), -1, keepdims=True)
-        scale = s_norm / (1 + s_norm) / K.sqrt(s_norm + K.epsilon())
-        return s * scale
 
 class Length(Layer):
     """Output of a capsule network, compute the norm of each capsule"""
