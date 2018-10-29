@@ -8,17 +8,32 @@ from keras.engine.base_layer import Layer
 from keras.layers.convolutional import Convolution2D
 from keras import backend as K
 
-class PrimaryCaps(Convolution2D):
-    """PrimaryCaps layer as described in Hinton's paper"""
-    def __init__(self, capsules, capsule_dim, activation_caps=None, **kwargs):
-        super().__init__(filters=capsules*capsule_dim, **kwargs)
-        self.capsule_dim = capsule_dim
-        self.capsules = capsules
-        self.activation_caps = activation_caps
+class CapsuleLayer(Layer):
+    def __init__(self,
+                 capsules,
+                 capsule_dim,
+                 activation_caps,
+                 kernel_initializer='glorot_uniform',
+                 kernel_regularizer=None,
+                 kernel_constraint=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.kernel_initializer = kernel_initializer
+        self.kernel_regularizer = kernel_regularizer
+        self.kernel_constraint = kernel_constraint
 
+        self.capsules = capsules
+        self.capsule_dim = capsule_dim
+        self.activation_caps = activation_caps
+        
+class PrimaryCaps(CapsuleLayer, Convolution2D):
+    """PrimaryCaps layer as described in Hinton's paper"""
+    def __init__(self, capsules, capsule_dim, activation_caps, **kwargs):
+        super().__init__(capsules, capsule_dim, activation_caps, filters=capsules*capsule_dim, **kwargs)
+    
     def call(self, inputs):
         # Apply convolution
-        outputs = super().call(inputs)
+        outputs = Convolution2D.call(self, inputs)
         outputs_shape = outputs.shape
 
         # Reshape -> (None, -1, capsule_dim)
@@ -30,20 +45,15 @@ class PrimaryCaps(Convolution2D):
         return outputs
 
     def compute_output_shape(self, input_shape):
-        outputs_shape = super().compute_output_shape(input_shape)
+        outputs_shape = Convolution2D.compute_output_shape(self, input_shape)
         return (input_shape[0], outputs_shape[1]*outputs_shape[2]*self.capsules, self.capsule_dim)
 
-class Caps(Layer):
+class Caps(CapsuleLayer):
     """Regular capsule layer. Input must be a PrimaryCaps layer. For example, see CapsDigit in original paper."""
-    def __init__(self, capsules, capsule_dim, routings, activation, kernel_initializer='glorot_uniform', kernel_regularizer=None, kernel_constraint=None, **kwargs):
-        super().__init__(**kwargs)
-        self.capsules = capsules
-        self.capsule_dim = capsule_dim
+    def __init__(self, capsules, capsule_dim, routings, activation_caps, **kwargs):
+        super().__init__(capsules, capsule_dim, activation_caps, **kwargs)
+
         self.routings = routings
-        self.kernel_initializer = kernel_initializer
-        self.kernel_regularizer = kernel_regularizer
-        self.kernel_constraint = kernel_constraint
-        self.activation = activation
         
 
     def build(self, input_shape):
@@ -81,7 +91,7 @@ class Caps(Layer):
             # Weighted sum, and squash activation
             # s.shape       batch_size, capsules, dim_capsule
             s = K.batch_dot(c, u_hat, [2, 2])
-            v = self.activation(s)
+            v = self.activation_caps(s)
 
             if r > 0:
                 b += K.batch_dot(v, u_hat, axes=[2, 3])
