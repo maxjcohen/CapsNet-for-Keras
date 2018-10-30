@@ -101,7 +101,7 @@ class Caps(CapsuleLayer):
     def compute_output_shape(self, input_shape):
         return (input_shape[0], self.capsules, self.capsule_dim)
 
-class Length(Layer):
+class ClassesCaps(Layer):
     """Output of a capsule network, compute the norm of each capsule"""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
