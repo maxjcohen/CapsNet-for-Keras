@@ -23,3 +23,18 @@ def plotHistory(metrics):
         plt.plot(metric)
         plt.title(metric_name)
         plt.xlabel('batch')
+
+def visualization(baseline, prediction):
+    plt.figure(figsize=(20, 10))
+    n_images = len(baseline)
+
+    for i in range(n_images):
+        ax = plt.subplot(2, n_images, i + 1)
+        plt.imshow(baseline[i].reshape(28, 28), cmap="gray")
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+        ax = plt.subplot(2, n_images, n_images + i + 1)
+        plt.imshow(prediction[i].reshape(28, 28), cmap="gray")
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
