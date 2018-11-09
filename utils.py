@@ -7,27 +7,30 @@ class LossHistory(Callback):
 
         self.metrics = {}
         for metric in metrics:
-            self.metrics[metric] = []
+            self.metrics[metric] = ([], [])
 
-    def on_batch_end(self, batch, logs={}):
+    def on_epoch_end(self, epoch, logs=None):
         for key, metric in self.metrics.items():
-            self.metrics[key].append( logs.get(key) )
+            self.metrics[key][0].append( logs.get(key) )
+            self.metrics[key][1].append( logs.get('val_' + key) )
+
 
 def plotHistory(metrics):
     num_metrics = len(metrics)
     plt.figure(figsize=(20, 4))
-
-    for idx_metric, (metric_name, metric) in enumerate(metrics.items()):
+    for idx_metric, (metric_name, (metric, metric_val)) in enumerate(metrics.items()):
         plt.subplot(1, num_metrics, idx_metric+1)
 
-        plt.plot(metric)
+        plt.plot(metric, '#EF6C00', label='train')
+        plt.plot(metric_val, '#0077BB', label='eval')
         plt.title(metric_name)
-        plt.xlabel('batch')
+        plt.xlabel('epoch')
+    plt.legend()
 
 def visualization(dataset, netout):
     images, labels = dataset
     reconstructions, predictions = netout
-    
+
     plt.figure(figsize=(20, 10))
     n_images = len(images)
 
@@ -37,7 +40,7 @@ def visualization(dataset, netout):
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         ax.set_title(labels[i])
-        
+
         ax = plt.subplot(2, n_images, n_images + i + 1)
         plt.imshow(reconstructions[i], cmap="gray")
         ax.get_xaxis().set_visible(False)
