@@ -21,8 +21,8 @@ def plotHistory(metrics):
     for idx_metric, (metric_name, (metric, metric_val)) in enumerate(metrics.items()):
         plt.subplot(1, num_metrics, idx_metric+1)
 
-        plt.plot(metric, '#EF6C00', label='train')
-        plt.plot(metric_val, '#0077BB', label='eval')
+        plt.plot(metric[1:], '#EF6C00', label='train')
+        plt.plot(metric_val[1:], '#0077BB', label='eval')
         plt.title(metric_name)
         plt.xlabel('epoch')
     plt.legend()
