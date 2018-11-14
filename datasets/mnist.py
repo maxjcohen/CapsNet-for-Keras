@@ -24,7 +24,7 @@ def dataGenerator(flag='train', batch_size=32, reshape=True, **kwargs):
     elif flag == 'test':
         generator = datagen.flow(x_test, y_test, batch_size)
     else:
-        raise NameError(f'Unknown flag {flag} encountered in dataGenerator')
+        raise NameError(f'Unknown flag "{flag}" encountered in dataGenerator')
 
     if reshape:
         generator = reshapeBatch(generator)
