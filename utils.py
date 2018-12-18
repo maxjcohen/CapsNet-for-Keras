@@ -27,7 +27,7 @@ def plotHistory(metrics):
         plt.xlabel('epoch')
     plt.legend()
 
-def visualization(dataset, netout):
+def visualization_train(dataset, netout):
     images, labels = dataset
     reconstructions, predictions = netout
 
@@ -46,3 +46,16 @@ def visualization(dataset, netout):
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         ax.set_title(predictions[i])
+        
+
+def visualization_data(images, labels, predictions):
+
+    plt.figure(figsize=(20, 10))
+    n_images = len(images)
+
+    for i in range(n_images):
+        ax = plt.subplot(1, n_images, i + 1)
+        plt.imshow(images[i], cmap="gray")
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.set_title(f'{predictions[i]} ({labels[i]})')
