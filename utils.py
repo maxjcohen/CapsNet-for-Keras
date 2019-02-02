@@ -61,7 +61,7 @@ def visualization_data(images, labels, predictions):
         ax.get_yaxis().set_visible(False)
         ax.set_title(f'{predictions[i]} ({labels[i]})')
         
-def rotation_accuracy(model, dataGenerator, batch_size=32, n_points=10):
+def rotation_accuracy(model, dataGenerator, steps, n_points=10):
     rotations = np.linspace(0, 180, n_points)
     data_augmentation = {'rotation_range': 0}
     
@@ -72,7 +72,7 @@ def rotation_accuracy(model, dataGenerator, batch_size=32, n_points=10):
         testGenerator = dataGenerator('test', batch_size=batch_size, reshape=False, **data_augmentation)
 
         # Test accuracy
-        test_acc = model.evaluate_generator(testGenerator, steps=10000/batch_size)[1]
+        test_acc = model.evaluate_generator(testGenerator, steps=steps)[1]
         print(f'Test acc [{deg}°]:\t{round(test_acc, 3)}')
         test_accuracy.append(test_acc)
         
