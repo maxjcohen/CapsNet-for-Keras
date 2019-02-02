@@ -1,3 +1,4 @@
+import numpy as np
 from matplotlib import pyplot as plt
 from keras.callbacks import Callback
 
@@ -59,3 +60,24 @@ def visualization_data(images, labels, predictions):
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         ax.set_title(f'{predictions[i]} ({labels[i]})')
+        
+def rotation_accuracy(model, dataGenerator, batch_size=32, n_points=10):
+    rotations = np.linspace(0, 180, n_points)
+    data_augmentation = {'rotation_range': 0}
+    
+    test_accuracy = []
+    for deg in rotations:
+        # Select data
+        data_augmentation['rotation_range'] = deg
+        testGenerator = dataGenerator('test', batch_size=batch_size, reshape=False, **data_augmentation)
+
+        # Test accuracy
+        test_acc = model.evaluate_generator(testGenerator, steps=10000/batch_size)[1]
+        print(f'Test acc [{deg}°]:\t{round(test_acc, 3)}')
+        test_accuracy.append(test_acc)
+        
+    # Plot
+    plt.plot(rotations, test_accuracy)
+    plt.title('rotation accuracy')
+    plt.xlabel('rotation (deg)')
+    plt.ylabel('test accuracy')
