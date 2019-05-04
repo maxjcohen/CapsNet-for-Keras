@@ -16,15 +16,18 @@ class LossHistory(Callback):
             self.metrics[key][1].append( logs.get('val_' + key) )
 
 
-def plotHistory(metrics):
+def plotHistory(history):
+    
+    metrics = [metric for metric in history.keys() if not metric[:3] == "val"]
     num_metrics = len(metrics)
+    
     plt.figure(figsize=(20, 4))
-    for idx_metric, (metric_name, (metric, metric_val)) in enumerate(metrics.items()):
-        plt.subplot(1, num_metrics, idx_metric+1)
+    for idx, metric in enumerate(metrics):
+        plt.subplot(1, num_metrics, idx+1)
 
-        plt.plot(metric[1:], '#EF6C00', label='train')
-        plt.plot(metric_val[1:], '#0077BB', label='eval')
-        plt.title(metric_name)
+        plt.plot(history[metric], '#EF6C00', label='train')
+        plt.plot(history[f"val_{metric}"], '#0077BB', label='eval')
+        plt.title(metric)
         plt.xlabel('epoch')
     plt.legend()
 

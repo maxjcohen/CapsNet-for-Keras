@@ -7,6 +7,7 @@ import numpy as np
 from keras.engine.base_layer import Layer
 from keras.layers.convolutional import Convolution2D
 from keras import backend as K
+import tensorflow as tf
 
 class CapsuleLayer(Layer):
     def __init__(self,
@@ -93,13 +94,58 @@ class Caps(CapsuleLayer):
             s = K.batch_dot(c, u_hat, [2, 2])
             v = self.activation_caps(s)
 
-            if r > 0:
-                b += K.batch_dot(v, u_hat, axes=[2, 3])
+            b += K.batch_dot(v, u_hat, axes=[2, 3])
 
         return v
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], self.capsules, self.capsule_dim)
+    
+    
+    
+class CapsCNN(Convolution2D):
+    def __init__(self, capsule_dim, routings, activation_caps, **kwargs):
+        kwargs.setdefault("use_bias", False)
+        super().__init__(filters=capsule_dim, **kwargs)
+        
+        self.capsule_dim = capsule_dim
+        self.activation_caps = activation_caps
+        self.routings = routings
+        
+    def call(self, inputs):
+        KS = self.kernel_size[0]
+        C = K.shape(inputs)[-1]
+        _, SO, _, _ = self.compute_output_shape(inputs.shape)
+        
+        
+        x_cols = tf.image.extract_image_patches(inputs,
+                                       ksizes=[1, KS, KS, 1],
+                                       strides=[1, 1, 1, 1],
+                                       rates=[1, 1, 1, 1],
+                                       padding="VALID"
+                                      )
+        
+        x_cols = K.reshape(x_cols, (-1, KS*KS, C))
+        w = K.reshape(self.kernel, (KS*KS, C, self.capsule_dim))
+        
+        u_hat = K.map_fn(lambda x: K.batch_dot(x, w, 1), elems=x_cols)
+        u_hat = K.reshape(u_hat, (-1, SO, SO, KS*KS, self.capsule_dim))
+        
+        b = K.zeros(shape=(K.shape(u_hat)[0], SO, SO, KS*KS))
+        
+        for r in range(self.routings):
+            c = K.softmax(b, axis=-1)
+
+            s = K.batch_dot(c, u_hat)
+            v = self.activation_caps(s)
+
+            add_value = K.batch_dot(u_hat, K.expand_dims(v, axis=-1))
+            add_value = K.squeeze(add_value, axis=-1)
+
+            b += add_value
+        
+        
+        return v
 
 class ClassesCaps(Layer):
     """Output of a capsule network, compute the norm of each capsule"""
