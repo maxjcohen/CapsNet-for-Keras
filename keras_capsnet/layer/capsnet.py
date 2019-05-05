@@ -119,16 +119,16 @@ class CapsCNN(Convolution2D):
         
         
         x_cols = tf.image.extract_image_patches(inputs,
-                                       ksizes=[1, KS, KS, 1],
-                                       strides=[1, 1, 1, 1],
-                                       rates=[1, 1, 1, 1],
-                                       padding="VALID"
+                                       ksizes=[1, *self.kernel_size, 1],
+                                       strides=[1, *self.strides, 1],
+                                       rates=[1, *self.dilation_rate, 1],
+                                       padding=self.padding.upper()
                                       )
         
         x_cols = K.reshape(x_cols, (-1, KS*KS, C))
         w = K.reshape(self.kernel, (KS*KS, C, self.capsule_dim))
         
-        u_hat = K.map_fn(lambda x: K.batch_dot(x, w, 1), elems=x_cols)
+        u_hat = K.local_conv1d(x_cols, w, [1], [1])
         u_hat = K.reshape(u_hat, (-1, SO, SO, KS*KS, self.capsule_dim))
         
         b = K.zeros(shape=(K.shape(u_hat)[0], SO, SO, KS*KS))
