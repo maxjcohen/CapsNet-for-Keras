@@ -135,15 +135,11 @@ class CapsCNN(Convolution2D):
         
         for r in range(self.routings):
             c = K.softmax(b, axis=-1)
-
-            s = K.batch_dot(c, u_hat)
-            v = self.activation_caps(s)
-
-            add_value = K.batch_dot(u_hat, K.expand_dims(v, axis=-1))
-            add_value = K.squeeze(add_value, axis=-1)
-
-            b += add_value
-        
+            
+            v = self.activation_caps(K.batch_dot(c, u_hat))
+            
+            if r < self.routings - 1:
+                b += K.batch_dot(v, u_hat, [3, 4])
         
         return v
 
