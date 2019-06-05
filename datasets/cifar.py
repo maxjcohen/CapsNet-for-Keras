@@ -2,7 +2,7 @@ from keras.datasets import cifar10
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
 
-from .utils import reshapeBatch
+from .utils import ReshapeBatch
 
 def dataGenerator(flag='train', batch_size=32, reshape=True, **kwargs):
     num_class = 10
@@ -27,6 +27,6 @@ def dataGenerator(flag='train', batch_size=32, reshape=True, **kwargs):
         raise NameError(f'Unknown flag "{flag}" encountered in dataGenerator')
 
     if reshape:
-        generator = reshapeBatch(generator)
+        generator = ReshapeBatch(generator)
 
     return generator
